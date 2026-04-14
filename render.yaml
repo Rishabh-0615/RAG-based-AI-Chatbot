@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: rag-chatbot-backend
+    runtime: node
+    rootDir: RAG-based-ChatBot/backend
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5005
+      - key: MONGO_URL
+        sync: false
+      - key: JWT_SEC
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+
+  - type: web
+    name: rag-chatbot-frontend
+    runtime: static
+    rootDir: RAG-based-ChatBot/frontend
+    buildCommand: npm install ; npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
