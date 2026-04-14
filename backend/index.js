@@ -11,23 +11,43 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5005;
+const normalizeOrigin = (value = "") => {
+  const cleaned = value.trim().replace(/^['"]|['"]$/g, "").replace(/\/+$/, "");
+
+  if (!cleaned) {
+    return "";
+  }
+
+  try {
+    return new URL(cleaned).origin.toLowerCase();
+  } catch {
+    return cleaned.toLowerCase();
+  }
+};
+
 const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
   .split(",")
-  .map((origin) => origin.trim())
+  .map((origin) => normalizeOrigin(origin))
   .filter(Boolean);
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.length === 0) {
+      return callback(null, true);
+    }
 
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  })
-);
+    const requestOrigin = normalizeOrigin(origin);
+    if (allowedOrigins.includes(requestOrigin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(bodyParser.json());
 app.use(express.json());
 
